@@ -1,5 +1,6 @@
-"""技能赛训协作基础服务的服务端基础包。"""
+"""中医文化夜市基础服务包。"""
 
+from .advice_service import AdviceService
 from .service import DomainService
 
-__all__ = ["DomainService"]
+__all__ = ["DomainService", "AdviceService"]
