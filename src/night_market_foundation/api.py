@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from .advice_api import route_advice
 from .errors import DomainError, ValidationError
 from .service import DomainService
 from .storage import Database
@@ -21,6 +22,9 @@ def route(service: DomainService, method: str, path: str, body: dict[str, Any] |
     body = body or {}
     parsed = urlparse(path)
     actor_id = headers.get("X-Actor-Id", "")
+    advice_result = route_advice(service, method, path, body, headers)
+    if advice_result is not None:
+        return advice_result
     try:
         if method == "GET" and parsed.path == "/health":
             valid, count = service.verify_audit()
@@ -99,7 +103,9 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=8080)
     args = parser.parse_args()
     database = Database(args.database)
-    Handler.service = DomainService(database)
+    from .advice import AdviceService
+
+    Handler.service = AdviceService(database)
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     try:
         server.serve_forever()
